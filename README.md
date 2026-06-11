@@ -8,6 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
+| v4 | [`v4`](https://github.com/chainguard-actions/dawidd6-action-homebrew-bump-formula/tree/v4) | [`8d49433`](https://github.com/dawidd6/action-homebrew-bump-formula/commit/8d494330bce4434918392df134ad3db1167904db) |
 | v5 | [`v5`](https://github.com/chainguard-actions/dawidd6-action-homebrew-bump-formula/tree/v5) | [`3428a06`](https://github.com/dawidd6/action-homebrew-bump-formula/commit/3428a0601bba3173ec0bdcc945be23fa27aa4c31) |
 | v7 | [`v7`](https://github.com/chainguard-actions/dawidd6-action-homebrew-bump-formula/tree/v7) | [`1446dca`](https://github.com/dawidd6/action-homebrew-bump-formula/commit/1446dca236b0440c6f02723a3f14f13be2c04ab0) |
 
