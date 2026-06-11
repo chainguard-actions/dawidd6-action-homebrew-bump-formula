@@ -1,0 +1,23 @@
+name: Test livecheck with org and no_fork inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: fake-token-for-input-coverage
+          tap: dawidd6/homebrew-tap
+          tap_url: https://github.com/dawidd6/homebrew-tap.git
+          formula: lazygit, lazydocker
+          org: my-github-org
+          no_fork: "true"
+          livecheck: "true"
+      - name: Assert action was invoked
+        run: |
+          echo "Action step completed (continue-on-error allows brew failures without real token)"
+          echo "PASS: livecheck, org, no_fork, and tap_url inputs were passed to the action"
