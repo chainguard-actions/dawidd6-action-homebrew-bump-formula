@@ -1,17 +1,106 @@
-# dawidd6/action-homebrew-bump-formula
+# Homebrew bump formula GitHub Action
 
-Bump (update) a Homebrew formula on new project release
+An action that wraps `brew bump-formula-pr` to ease the process of updating the formula on new project releases.
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/dawidd6/action-homebrew-bump-formula](https://github.com/dawidd6/action-homebrew-bump-formula).
+Works on Ubuntu and macOS runners.
 
-## Versions
+## Usage
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v4 | [`v4`](https://github.com/chainguard-actions/dawidd6-action-homebrew-bump-formula/tree/v4) | [`8d49433`](https://github.com/dawidd6/action-homebrew-bump-formula/commit/8d494330bce4434918392df134ad3db1167904db) |
-| v5 | [`v5`](https://github.com/chainguard-actions/dawidd6-action-homebrew-bump-formula/tree/v5) | [`3428a06`](https://github.com/dawidd6/action-homebrew-bump-formula/commit/3428a0601bba3173ec0bdcc945be23fa27aa4c31) |
-| v6 | [`v6`](https://github.com/chainguard-actions/dawidd6-action-homebrew-bump-formula/tree/v6) | [`c5ddc58`](https://github.com/dawidd6/action-homebrew-bump-formula/commit/c5ddc585e75f0f750a8b4f610688b4bec9e80915) |
-| v7 | [`v7`](https://github.com/chainguard-actions/dawidd6-action-homebrew-bump-formula/tree/v7) | [`1446dca`](https://github.com/dawidd6/action-homebrew-bump-formula/commit/1446dca236b0440c6f02723a3f14f13be2c04ab0) |
+One should use the [Personal Access Token](https://github.com/settings/tokens/new?scopes=public_repo,workflow) for `token` input to this Action, not the default `GITHUB_TOKEN`, because `brew bump-formula-pr` creates a fork of the formula's tap repository (if needed) and then creates a pull request.
+
+> There are two ways to use this Action.
+
+### Standard mode
+
+Use if you want to simply bump the formula, when a new release happens.
+
+Listen for new tags in workflow:
+
+```yaml
+on:
+  # trigger when release got created (preferred)
+  release:
+    types: [released]
+  # trigger on tag push
+  # push:
+  #   tags:
+  #     - "*"
+```
+
+The Action will extract all needed informations by itself, you just need to specify the following step in your workflow:
+
+```yaml
+- name: Update Homebrew formula
+  uses: dawidd6/action-homebrew-bump-formula@<REF>
+  with:
+    # Required, custom GitHub access token with the 'public_repo' and 'workflow' scopes
+    token: ${{secrets.TOKEN}}
+    # Optional, will commit with this user name
+    user_name: name
+    # Optional, will commit with this user email
+    user_email: email@example.com
+    # Optional, will create tap repo fork in organization
+    org: ORG
+    # Optional, use the origin repository instead of forking
+    no_fork: false
+    # Optional, defaults to homebrew/core
+    tap: USER/REPO
+    # Formula name, required
+    formula: FORMULA
+    # Optional, will be determined automatically
+    tag: ${{github.ref}}
+    # Optional, will be determined automatically
+    revision: ${{github.sha}}
+    # Optional, if don't want to check for already open PRs
+    force: false # true
+```
+
+### Livecheck mode
+
+If `livecheck` input is set to `true`, the Action will run `brew livecheck` to check if any provided formulae are outdated or if tap contains any outdated formulae and then will run `brew bump-formula-pr` on each of those formulae with proper arguments to bump them.
+
+Might be a good idea to run this on schedule in your tap repo, so one gets automated PRs updating outdated formulae.
+
+If there are no outdated formulae, the Action will just exit.
+
+```yaml
+- name: Update Homebrew formula
+  uses: dawidd6/action-homebrew-bump-formula@<REF>
+  with:
+    # Required, custom personal GitHub access token with only the 'public_repo' scope enabled
+    token: ${{secrets.CUSTOM_PERSONAL_ACCESS_TOKEN}}
+    # Optional, will commit with this user name
+    user_name: user_name
+    # Optional, will commit with this user email
+    user_email: email@example.com
+    # Optional, will create tap repo fork in organization
+    org: ORG
+    # Bump all outdated formulae in this tap
+    tap: USER/REPO
+    # Bump only these formulae if outdated
+    formula: FORMULA-1, FORMULA-2, FORMULA-3, ...
+    # Optional, if don't want to check for already open PRs
+    force: false # true
+    # Need to set this input if want to use `brew livecheck`
+    livecheck: true
+```
+
+If only `tap` input is provided, all formulae in given tap will be checked and bumped if needed.
+
+## Examples
+
+- https://github.com/dawidd6/action-homebrew-bump-formula/blob/master/.github/workflows/test.yml
+- https://github.com/dawidd6/ba-bump/blob/master/.github/workflows/bump.yml
+- https://github.com/ablinov/declutter/blob/master/.github/workflows/bump_homebrew_formula.yml
+- https://github.com/jesseduffield/lazygit/blob/master/.github/workflows/cd.yml
+- https://github.com/stephan-hesselmann-by/homebrew-BlueYonder/blob/master/.github/workflows/update-tap.yml
+- https://github.com/crunchtime-ali/brew-formula-updater/blob/master/.github/workflows/main.yml
+- https://github.com/asciidoc/asciidoc-py3/blob/master/.github/workflows/release.yml
+- https://github.com/bow-swift/nef/blob/master/.github/workflows/bump-formula.yml
+- https://github.com/dandavison/delta/blob/master/.github/workflows/cd.yml
+- https://github.com/GitTools/GitVersion/blob/main/.github/workflows/homebrew.yml
+- https://github.com/wormi4ok/evernote2md/blob/master/.github/workflows/publish.yml
+- https://github.com/cloudskiff/driftctl/blob/main/.github/workflows/homebrew.yml
 
 ## Privacy
 
