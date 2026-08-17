@@ -1,0 +1,32 @@
+name: Test missing tag input validation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run action and expect failure on missing tag
+        id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          formula: wget
+          # No tag input — the default is github.ref which under workflow_dispatch
+          # resolves to refs/heads/act-harness (not a version tag), so the action
+          # should still proceed but fail at brew bump-formula-pr with an invalid version.
+          # We override tag to empty to trigger the "Need 'tag' input specified" error.
+          tag: ""
+          user_name: test-user
+          user_email: test@example.com
+        continue-on-error: true
+      - name: Assert action failed as expected
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail when tag input is empty, but got outcome=$OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly failed when tag input was empty"

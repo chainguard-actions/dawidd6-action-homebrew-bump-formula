@@ -1,0 +1,28 @@
+name: Test missing formula input validation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run action and expect failure on missing formula
+        id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # No formula input — should fail with "Need 'formula' input specified"
+          tag: v1.0.0
+          user_name: test-user
+          user_email: test@example.com
+        continue-on-error: true
+      - name: Assert action failed as expected
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail when formula input is missing, but got outcome=$OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly failed when formula input was missing"
