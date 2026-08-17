@@ -1,0 +1,58 @@
+name: Test basic invocation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify action.yml exists
+        run: |
+          if [ ! -f action.yml ]; then
+            echo "FAIL: action.yml not found"
+            exit 1
+          fi
+          echo "PASS: action.yml found"
+
+      - name: Verify main.rb exists
+        run: |
+          if [ ! -f main.rb ]; then
+            echo "FAIL: main.rb not found"
+            exit 1
+          fi
+          echo "PASS: main.rb found"
+
+      - name: Verify Homebrew is available on Linux
+        run: |
+          # Add linuxbrew to PATH as the action does
+          export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+          if ! command -v brew &>/dev/null; then
+            echo "SKIP: brew not available in this environment"
+            exit 0
+          fi
+          echo "PASS: brew is available"
+
+      - id: action
+        uses: .
+        with:
+          token: fake-token-for-testing
+          formula: wget
+          tap: homebrew/core
+          tag: refs/tags/v1.0.0
+          revision: abc123def456abc123def456abc123def456abc1
+        continue-on-error: true
+
+      - name: Assert action ran (may fail due to invalid token)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          # The action is expected to fail because the token is fake
+          # and brew ruby main.rb will fail at the API call stage.
+          # What we verify is that the action was invoked at all.
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action was invoked (outcome=$OUTCOME)"

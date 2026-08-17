@@ -1,0 +1,33 @@
+name: Test missing tag input fails
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Run the action with formula but without tag (non-livecheck mode).
+      # The Ruby script should die early with "Need 'tag' input specified".
+      # Note: tag has a default of ${{github.ref}} which under workflow_dispatch
+      # resolves to refs/heads/act-harness (not a tag ref), but the action only
+      # checks if tag is blank — a branch ref will pass this check and proceed
+      # to the API calls. So we explicitly set tag to empty string via env override.
+      - id: action
+        uses: .
+        continue-on-error: true
+        env:
+          HOMEBREW_BUMP_TAG: ""
+        with:
+          token: ${{ github.token }}
+          formula: some-formula
+          tag: ""
+
+      - name: Assert action failed as expected
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          if [ "${{ steps.action.outcome }}" != "failure" ]; then
+            echo "FAIL: expected action to fail when tag is missing"
+            exit 1
+          fi
+          echo "PASS: action correctly failed when tag input was missing"

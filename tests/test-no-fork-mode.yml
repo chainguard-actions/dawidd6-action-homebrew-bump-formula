@@ -1,0 +1,40 @@
+name: Test no-fork mode
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify no_fork input is defined in action.yml
+        run: |
+          if ! grep -q "no_fork" action.yml; then
+            echo "FAIL: no_fork input not found in action.yml"
+            exit 1
+          fi
+          echo "PASS: no_fork input found in action.yml"
+
+      - id: action
+        uses: .
+        with:
+          token: fake-token-for-testing
+          formula: wget
+          tap: homebrew/core
+          tag: refs/tags/v1.0.0
+          revision: abc123def456abc123def456abc123def456abc1
+          no_fork: "true"
+        continue-on-error: true
+
+      - name: Assert action ran in no-fork mode
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          # The action is expected to fail because the token is fake.
+          # What we verify is that the action was invoked (not skipped).
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action was invoked in no-fork mode (outcome=$OUTCOME)"

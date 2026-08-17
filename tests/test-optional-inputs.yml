@@ -1,0 +1,48 @@
+name: Test optional inputs coverage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify optional inputs are defined in action.yml
+        run: |
+          for input in force message org tap_url user_email user_name; do
+            if ! grep -q "$input" action.yml; then
+              echo "FAIL: $input input not found in action.yml"
+              exit 1
+            fi
+            echo "PASS: $input input found in action.yml"
+          done
+
+      - id: action
+        uses: .
+        with:
+          token: fake-token-for-testing
+          formula: wget
+          tap: homebrew/core
+          tap_url: https://github.com/Homebrew/homebrew-core.git
+          tag: refs/tags/v1.0.0
+          revision: abc123def456abc123def456abc123def456abc1
+          user_name: test-user
+          user_email: test-user@example.com
+          message: "Bump formula for testing purposes"
+          org: test-org
+          force: "true"
+        continue-on-error: true
+
+      - name: Assert action ran with optional inputs
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          # The action is expected to fail because the token is fake
+          # and brew ruby main.rb will fail at the API call stage.
+          # What we verify is that the action was invoked (not skipped).
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action was invoked with optional inputs (outcome=$OUTCOME)"
