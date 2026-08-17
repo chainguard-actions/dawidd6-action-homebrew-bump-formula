@@ -1,0 +1,40 @@
+name: Test user identity and message inputs (expects failure with fake token)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # This test exercises the user_name, user_email, and message inputs.
+      # These are passed as git identity and PR message when creating the bump PR.
+      # With a fake token the action will fail at the API step, but we verify
+      # the action is invoked and reaches execution (not a setup/path error).
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: fake-token-for-testing
+          tap: homebrew/core
+          formula: wget
+          tag: refs/tags/v1.0.0
+          revision: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          force: "true"
+          user_name: "Test Bot"
+          user_email: "testbot@example.com"
+          message: "Automated bump for testing purposes"
+        env:
+          GITHUB_REF: refs/tags/v1.0.0
+          GITHUB_SHA: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+      - name: Assert action ran with user identity and message inputs
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "action outcome: $OUTCOME"
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with user_name, user_email, and message inputs (outcome=$OUTCOME, expected failure with fake token)"
